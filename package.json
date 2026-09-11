@@ -1,0 +1,17 @@
+{
+  "name": "@actuent/sdk",
+  "version": "0.1.0",
+  "description": "List your site on Actuent — The Internet for AI",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": ["actuent", "LAWP", "AI", "agents", "MCP"],
+  "author": "Locali Labs",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
