@@ -50,3 +50,17 @@ Visit [actuent.ai](https://actuent.ai) to get your API key.
 ## What is LAWP?
 
 LAWP (Locali AI Web Protocol) is a structured JSON format for websites — like HTML but built for AI agents instead of browsers. When you register your site with Actuent, AI agents can find it, read it, and take actions on it just like a human would browse your site.
+
+## Verify your domain
+
+Registering requires proof that you own the domain. If it isn't verified yet, `register()` fails with a token. Add it as a DNS TXT record and run `register()` again:
+
+```
+yoursite.com  TXT  "actuent-site-verification=<token>"
+```
+
+Serving a valid `https://yoursite.com/.well-known/lawp.json` verifies you automatically.
+
+## Executable actions
+
+Give an action an `endpoint` in your own `/.well-known/lawp.json` and AI agents can perform it through Actuent. Requests are signed with Ed25519. See https://docs.actuent.ai/#actions
