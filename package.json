@@ -1,6 +1,6 @@
 {
   "name": "@actuent/sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "List your site on Actuent \u2014 The Internet for AI",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
