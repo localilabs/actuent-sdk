@@ -15,7 +15,7 @@
     "agents",
     "MCP"
   ],
-  "author": "Locali Labs",
+  "author": "localilabs",
   "license": "MIT",
   "devDependencies": {
     "typescript": "^5.0.0",
