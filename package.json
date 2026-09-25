@@ -1,17 +1,33 @@
 {
   "name": "@actuent/sdk",
   "version": "0.2.0",
-  "description": "List your site on Actuent — The Internet for AI",
+  "description": "List your site on Actuent \u2014 The Internet for AI",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
-  "keywords": ["actuent", "LAWP", "AI", "agents", "MCP"],
+  "keywords": [
+    "actuent",
+    "LAWP",
+    "AI",
+    "agents",
+    "MCP"
+  ],
   "author": "Locali Labs",
   "license": "MIT",
   "devDependencies": {
     "typescript": "^5.0.0",
     "@types/node": "^20.0.0"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/localilabs/actuent-sdk"
+  },
+  "homepage": "https://docs.actuent.ai/#sdk"
 }
