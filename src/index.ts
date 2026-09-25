@@ -7,6 +7,12 @@ export type Action = {
     type: "text" | "number" | "none"
     required: boolean
   }
+  // Makes the action executable by AI agents. Only used when served from your own
+  // https://<domain>/.well-known/lawp.json — see https://docs.actuent.ai/#actions
+  endpoint?: {
+    url: string
+    method?: "POST" | "GET"
+  }
 }
 
 export type Page = {
