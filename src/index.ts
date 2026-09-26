@@ -21,6 +21,8 @@ export type Action = {
   }
   // Makes the action executable by AI agents. Only used when served from your own
   // https://<domain>/.well-known/lawp.json — see https://docs.actuent.ai/#actions
+  // Where a person can do this themselves, e.g. a booking page (LAWP 0.3)
+  url?: string
   endpoint?: {
     url: string
     method?: "POST" | "GET"
