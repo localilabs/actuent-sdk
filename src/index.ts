@@ -65,3 +65,65 @@ export async function register(config: ActuentConfig): Promise<void> {
 
   console.log(`✅ ${config.site.domain} registered on Actuent`)
 }
+
+// ----- Client: search Actuent and use the same tools as ChatGPT and Claude -----
+
+export type ClientOptions = { apiKey?: string, baseUrl?: string, agentsUrl?: string }
+
+export class ActuentError extends Error {
+  constructor(message: string, public status?: number, public body?: unknown) { super(message) }
+}
+
+export class Actuent {
+  private apiKey?: string
+  private baseUrl: string
+  private agentsUrl: string
+
+  constructor(options: ClientOptions = {}) {
+    this.apiKey = options.apiKey
+    this.baseUrl = (options.baseUrl || "https://api.actuent.ai").replace(/\/$/, "")
+    this.agentsUrl = (options.agentsUrl || "https://agents.actuent.ai").replace(/\/$/, "")
+  }
+
+  private async request(url: string, body?: unknown): Promise<any> {
+    const res = await fetch(url, {
+      method: body === undefined ? "GET" : "POST",
+      headers: { "Accept": "application/json", ...(body !== undefined ? { "Content-Type": "application/json" } : {}), ...(this.apiKey ? { "Authorization": `Bearer ${this.apiKey}` } : {}) },
+      body: body === undefined ? undefined : JSON.stringify(body)
+    })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) throw new ActuentError(data?.error || data?.message || `HTTP ${res.status}`, res.status, data)
+    return data
+  }
+
+  /** Search by topic, domain or page, in any language: { results, products }. */
+  search(query: string) { return this.request(`${this.baseUrl}/api/search?q=${encodeURIComponent(query)}`) }
+
+  /** A site's agent-readiness score (0–100), label, category and checks. */
+  score(domain: string) { return this.request(`${this.baseUrl}/badge.json?domain=${encodeURIComponent(domain)}`) }
+
+  /** Call any Actuent MCP tool, e.g. tool("actuent_plan", { location: "Copenhagen" }). */
+  async tool(name: string, args: Record<string, unknown> = {}): Promise<any> {
+    const reply = await this.request(`${this.agentsUrl}/api/mcp`, { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } })
+    if (!reply?.result) throw new ActuentError(reply?.error?.message || "Unexpected response", undefined, reply)
+    const text = (reply.result.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("")
+    let data: any = text
+    try { data = JSON.parse(text) } catch {}
+    if (reply.result.isError) throw new ActuentError(data?.error || text || `${name} failed`, undefined, data)
+    return data
+  }
+
+  getActions(domain: string) { return this.tool("actuent_get_actions", { domain }) }
+  askSite(domain: string, question: string) { return this.tool("actuent_ask_site", { domain, question }) }
+  nearby(query: string, location: string, options: { radius_metres?: number, open_now?: boolean, filters?: string[] } = {}) { return this.tool("actuent_nearby", { query, location, ...options }) }
+  findService(query: string, options: { location?: string, max_price?: number, currency?: string } = {}) { return this.tool("actuent_find_service", { query, ...options }) }
+  plan(location: string, options: { stops?: string[], date?: string, start_time?: string, cuisine?: string, filters?: string[] } = {}) { return this.tool("actuent_plan", { location, ...options }) }
+  trip(location: string, options: { days?: number, start_date?: string, filters?: string[] } = {}) { return this.tool("actuent_trip", { location, ...options }) }
+  events(options: { location?: string, query?: string, from?: string, to?: string } = {}) { return this.tool("actuent_events", options) }
+  compareSites(domains: string[]) { return this.tool("actuent_compare", { domains }) }
+  compareProducts(urls: string[]) { return this.tool("actuent_compare", { products: urls }) }
+  /** Pro: email (and optional webhook) when the price drops or it's back in stock. */
+  watchPrice(url: string, options: { target_price_eur?: number, notify?: "price" | "stock" | "both", webhook_url?: string } = {}) { return this.tool("actuent_watch_price", { url, ...options }) }
+  /** Pro: perform a site's action. Confirm with your user first. */
+  executeAction(domain: string, actionId: string, input?: unknown) { return this.tool("actuent_execute_action", { domain, action_id: actionId, input }) }
+}

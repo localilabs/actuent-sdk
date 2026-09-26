@@ -64,3 +64,17 @@ Serving a valid `https://yoursite.com/.well-known/lawp.json` verifies you automa
 ## Executable actions
 
 Give an action an `endpoint` in your own `/.well-known/lawp.json` and AI agents can perform it through Actuent. Requests are signed with Ed25519. See https://docs.actuent.ai/#actions
+
+## Client (0.4)
+
+Search Actuent and use the same tools as ChatGPT and Claude:
+
+```ts
+import { Actuent } from "@actuent/sdk"
+const actuent = new Actuent()                       // or new Actuent({ apiKey }) for Pro
+await actuent.search("running shoes under €100")
+await actuent.plan("Nørreport, Copenhagen", { stops: ["dinner", "drinks"] })
+await actuent.findService("skin fade under €30", { location: "Amsterdam" })
+await actuent.score("yoursite.com")                 // agent-readiness 0–100
+await actuent.tool("actuent_trip", { location: "Lisbon", days: 3 })   // any MCP tool
+```
