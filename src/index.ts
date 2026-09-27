@@ -23,6 +23,12 @@ export type Action = {
   // https://<domain>/.well-known/lawp.json — see https://docs.actuent.ai/#actions
   // Where a person can do this themselves, e.g. a booking page (LAWP 0.3)
   url?: string
+  // LAWP 0.4
+  output?: { fields: InputField[] }
+  modes?: ("execute" | "quote")[]
+  safety?: { requires_confirmation?: boolean, costs_money?: boolean | { amount: number, currency: string }, reversible?: boolean, destructive?: boolean }
+  account?: "none" | "optional" | "required"
+  scopes?: string[]
   endpoint?: {
     url: string
     method?: "POST" | "GET"
@@ -34,11 +40,32 @@ export type Page = {
   content: string
 }
 
+export type OpeningHours = { days: ("Mo" | "Tu" | "We" | "Th" | "Fr" | "Sa" | "Su")[], opens: string, closes: string }
+
+// LAWP 0.4: businesses describe themselves.
+export type Business = {
+  type?: string, name?: string, telephone?: string, email?: string, price_range?: string,
+  address?: { street?: string, postcode?: string, city?: string, region?: string, country?: string },
+  geo?: { lat: number, lon: number },
+  opening_hours?: OpeningHours[],
+  closed_on_public_holidays?: boolean,
+  offers?: { name: string, price?: number, currency?: string, category?: string, description?: string, action?: string }[]
+}
+
 export type LawpConfig = {
   domain: string
   name: string
   pages: Record<string, Page>
   actions: Action[]
+  // LAWP 0.4
+  lawp_version?: string
+  language?: string
+  updated_at?: string
+  ttl?: number
+  business?: Business
+  accounts?: { type: "oauth2", authorization_url: string, token_url: string, registration_url?: string, scopes?: Record<string, string> }
+  translations?: Record<string, { name?: string, pages?: Record<string, Page>, actions?: Record<string, { name?: string, description?: string, intent?: string[] }> }>
+  more_pages?: string[]
 }
 
 export type ActuentConfig = {
@@ -124,6 +151,12 @@ export class Actuent {
   compareProducts(urls: string[]) { return this.tool("actuent_compare", { products: urls }) }
   /** Pro: email (and optional webhook) when the price drops or it's back in stock. */
   watchPrice(url: string, options: { target_price_eur?: number, notify?: "price" | "stock" | "both", webhook_url?: string } = {}) { return this.tool("actuent_watch_price", { url, ...options }) }
-  /** Pro: perform a site's action. Confirm with your user first. */
-  executeAction(domain: string, actionId: string, input?: unknown) { return this.tool("actuent_execute_action", { domain, action_id: actionId, input }) }
+  /**
+   * Pro: perform a site's action. Actions that cost money or ask for confirmation first return
+   * needs_confirmation: show the user, then call again with { confirmed: true }. Use { mode: "quote" }
+   * for price and availability without committing.
+   */
+  executeAction(domain: string, actionId: string, input?: unknown, options: { mode?: "execute" | "quote", confirmed?: boolean } = {}) { return this.tool("actuent_execute_action", { domain, action_id: actionId, input, ...options }) }
+  /** Pro: check a long-running action that returned pending. */
+  actionStatus(domain: string, statusUrl: string) { return this.tool("actuent_action_status", { domain, status_url: statusUrl }) }
 }
