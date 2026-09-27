@@ -95,36 +95,82 @@ export async function register(config: ActuentConfig): Promise<void> {
 
 // ----- Client: search Actuent and use the same tools as ChatGPT and Claude -----
 
-export type ClientOptions = { apiKey?: string, baseUrl?: string, agentsUrl?: string }
+export type ClientOptions = {
+  apiKey?: string, baseUrl?: string, agentsUrl?: string,
+  /** Retries when Actuent is busy (429/503), waiting as long as the server asks (max 60s). Default 1. */
+  retries?: number
+}
+
+/** Why results are limited or empty, in plain English: show `message` to the user. https://docs.actuent.ai/#errors */
+export type Notice = {
+  code: "busy_limited_results" | "busy_saved_copy" | "busy_queued" | "busy_no_results" | "busy" | "heavy_use" | "site_unreachable" | "robots_blocked" | "no_results" | "temporarily_unavailable"
+  message: string
+  retry_after_seconds?: number
+}
+
+export type SearchResult = {
+  domain: string, name: string, pages: Record<string, Page>, actions: Action[], native: boolean, executable: boolean,
+  category?: string, business?: Business, open_now?: boolean | null, last_updated: string | null, age_hours: number | null,
+  /** Why this result came up, e.g. '"dentist" in actions (book); "berlin" in address'. */
+  matched?: string
+  /** Country versions of the same brand, folded under this result (nike.com.br…). */
+  regional_sites?: string[]
+  visit_url: string
+}
+
+export type Place = { name: string, type: string, address: string, website: string | null, phone: string | null, opening_hours: string | null, map: string }
+
+export type SearchResponse = {
+  query: string, count: number, results: SearchResult[], products?: any[]
+  /** Local searches with no indexed websites yet: places from OpenStreetMap. */
+  places?: { source: "OpenStreetMap", attribution: string, items: Place[] }
+  /** Present when results are limited or empty. */
+  message?: string
+  notices?: Notice[]
+}
 
 export class ActuentError extends Error {
-  constructor(message: string, public status?: number, public body?: unknown) { super(message) }
+  /** Seconds to wait before trying again, when Actuent is busy. */
+  retryAfter?: number
+  constructor(message: string, public status?: number, public body?: unknown) {
+    super(message)
+    const r = (body as any)?.retry_after_seconds
+    if (typeof r === "number") this.retryAfter = r
+  }
 }
 
 export class Actuent {
   private apiKey?: string
   private baseUrl: string
   private agentsUrl: string
+  private retries: number
 
   constructor(options: ClientOptions = {}) {
     this.apiKey = options.apiKey
+    this.retries = Math.max(0, options.retries ?? 1)
     this.baseUrl = (options.baseUrl || "https://api.actuent.ai").replace(/\/$/, "")
     this.agentsUrl = (options.agentsUrl || "https://agents.actuent.ai").replace(/\/$/, "")
   }
 
-  private async request(url: string, body?: unknown): Promise<any> {
+  private async request(url: string, body?: unknown, attempt = 0): Promise<any> {
     const res = await fetch(url, {
       method: body === undefined ? "GET" : "POST",
       headers: { "Accept": "application/json", ...(body !== undefined ? { "Content-Type": "application/json" } : {}), ...(this.apiKey ? { "Authorization": `Bearer ${this.apiKey}` } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body)
     })
     const data = await res.json().catch(() => null)
-    if (!res.ok) throw new ActuentError(data?.error || data?.message || `HTTP ${res.status}`, res.status, data)
+    // Busy or rate-limited: wait as long as the server asks, then try again (politely, a few times at most).
+    if ((res.status === 429 || res.status === 503) && attempt < this.retries) {
+      const wait = Math.min(Number(res.headers.get("retry-after")) || data?.retry_after_seconds || 30, 60)
+      await new Promise(r => setTimeout(r, wait * 1000))
+      return this.request(url, body, attempt + 1)
+    }
+    if (!res.ok) throw new ActuentError(data?.message || data?.error || `HTTP ${res.status}`, res.status, data)
     return data
   }
 
-  /** Search by topic, domain or page, in any language: { results, products }. */
-  search(query: string) { return this.request(`${this.baseUrl}/api/search?q=${encodeURIComponent(query)}`) }
+  /** Search by topic, domain or page, in any language. When results are limited or empty, `message` says why. */
+  search(query: string): Promise<SearchResponse> { return this.request(`${this.baseUrl}/api/search?q=${encodeURIComponent(query)}`) }
 
   /** A site's agent-readiness score (0–100), label, category and checks. */
   score(domain: string) { return this.request(`${this.baseUrl}/badge.json?domain=${encodeURIComponent(domain)}`) }
@@ -136,7 +182,7 @@ export class Actuent {
     const text = (reply.result.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("")
     let data: any = text
     try { data = JSON.parse(text) } catch {}
-    if (reply.result.isError) throw new ActuentError(data?.error || text || `${name} failed`, undefined, data)
+    if (reply.result.isError) throw new ActuentError(data?.message || data?.error || text || `${name} failed`, undefined, data)
     return data
   }
 

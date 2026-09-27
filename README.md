@@ -78,3 +78,14 @@ await actuent.findService("skin fade under €30", { location: "Amsterdam" })
 await actuent.score("yoursite.com")                 // agent-readiness 0–100
 await actuent.tool("actuent_trip", { location: "Lisbon", days: 3 })   // any MCP tool
 ```
+
+## When Actuent is busy
+
+Search results that are limited or empty come with a plain-English `message` (and `notices`) you can show the user:
+
+```ts
+const res = await actuent.search("barber amsterdam")
+if (res.message) console.log(res.message)
+```
+
+If Actuent is very busy (HTTP 429 or 503), the client waits as long as the server asks and tries once more. Set `new Actuent({ retries: 0 })` to turn that off. Errors are `ActuentError` with a readable `message` and `retryAfter` in seconds. See [Errors & busy times](https://docs.actuent.ai/#errors).
