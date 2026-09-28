@@ -115,6 +115,10 @@ export type SearchResult = {
   matched?: string
   /** Country versions of the same brand, folded under this result (nike.com.br…). */
   regional_sites?: string[]
+  /** The sentence that best answers the search. */
+  snippet?: string
+  /** How strong the match is, 0-100 (the top result is 100). */
+  score?: number
   visit_url: string
 }
 
@@ -127,7 +131,20 @@ export type SearchResponse = {
   /** Present when results are limited or empty. */
   message?: string
   notices?: Notice[]
+  /** The search that was run, when it differs from what was typed ("where can I buy X" → "buy X"). */
+  interpreted_as?: string
+  /** Upcoming events, for event searches. */
+  events?: { name: string, url: string, domain: string, start_date: string, end_date?: string | null, venue?: string | null, city?: string | null, visit_url: string }[]
+  /** Related searches to try. */
+  related?: string[]
+  /** A spelling correction; searched_for is set when the correction was searched instead. */
+  did_you_mean?: string
+  searched_for?: string
+  /** Total results before paging (when limit/offset or filters are used). */
+  total?: number
 }
+
+export type SearchOptions = { limit?: number, offset?: number, category?: string, city?: string, lang?: string, open_now?: boolean, sort?: "relevance" | "popular" | "fresh" }
 
 export class ActuentError extends Error {
   /** Seconds to wait before trying again, when Actuent is busy. */
@@ -170,7 +187,16 @@ export class Actuent {
   }
 
   /** Search by topic, domain or page, in any language. When results are limited or empty, `message` says why. */
-  search(query: string): Promise<SearchResponse> { return this.request(`${this.baseUrl}/api/search?q=${encodeURIComponent(query)}`) }
+  search(query: string, options: SearchOptions = {}): Promise<SearchResponse> {
+    const params = new URLSearchParams({ q: query })
+    for (const [k, v] of Object.entries(options)) if (v != null) params.set(k, String(v))
+    return this.request(`${this.baseUrl}/api/search?${params}`)
+  }
+
+  /** Autocomplete: sites and searches that start with what's typed. */
+  autocomplete(prefix: string): Promise<{ query: string, sites: { name: string, domain: string, category: string | null }[], searches: string[] }> {
+    return this.request(`${this.baseUrl}/api/autocomplete?q=${encodeURIComponent(prefix)}`)
+  }
 
   /** A site's agent-readiness score (0–100), label, category and checks. */
   score(domain: string) { return this.request(`${this.baseUrl}/badge.json?domain=${encodeURIComponent(domain)}`) }
