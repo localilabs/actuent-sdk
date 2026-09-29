@@ -1,3 +1,5 @@
+<p align="center"><img src="https://api.actuent.ai/assets/lawpy/lawpy-dance.gif" width="108" height="72" alt="Lawpy, the Actuent mascot, dancing"></p>
+
 # @actuent/sdk
 
 List your site on [Actuent](https://actuent.ai) — The Internet for AI.
