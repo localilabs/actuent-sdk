@@ -4,6 +4,25 @@ List your site on [Actuent](https://actuent.ai) — The Internet for AI.
 
 AI agents can't read normal websites. Actuent fixes that with LAWP (Locali AI Web Protocol) — a structured JSON version of your site that any AI can read, understand, and act on.
 
+## Try it in your terminal
+
+```bash
+npx actuent search "vegan café copenhagen"
+npx actuent ask basecamp.com "is there a free plan?"
+npx actuent similar notion.so
+```
+
+Run `npx actuent` on its own for the quickstart (Lawpy, our mascot, says hello). Add `--json` for raw output, or set `ACTUENT_API_KEY` for Pro.
+
+## Tools for AI agents
+
+```js
+import { actuentTools } from "@actuent/sdk/ai"                 // Vercel AI SDK
+import { actuentLangChainTools } from "@actuent/sdk/langchain"  // LangChain.js
+```
+
+Both give an agent three tools: search, ask a site and similar sites. Try everything live in the [API Playground](https://docs.actuent.ai/playground).
+
 ## Install
 
 ```bash
