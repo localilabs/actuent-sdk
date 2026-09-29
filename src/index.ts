@@ -137,6 +137,10 @@ export type SearchResponse = {
   events?: { name: string, url: string, domain: string, start_date: string, end_date?: string | null, venue?: string | null, city?: string | null, visit_url: string }[]
   /** Related searches to try. */
   related?: string[]
+  /** "A vs B" searches: both sites, which are also the first two results. */
+  comparison?: { sites: string[], tip: string }
+  /** Questions about one site ("does basecamp have a free plan"): sentences from its own pages. */
+  answer?: { domain: string, sentences: { text: string, url: string }[], note: string }
   /** A spelling correction; searched_for is set when the correction was searched instead. */
   did_you_mean?: string
   searched_for?: string
