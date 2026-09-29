@@ -1,7 +1,7 @@
 {
   "name": "@actuent/sdk",
-  "version": "0.8.0",
-  "description": "List your site on Actuent \u2014 The Internet for AI",
+  "version": "0.9.0",
+  "description": "Actuent SDK: search websites and products as structured data, ask a site, find similar sites, and tools for the Vercel AI SDK and LangChain",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -9,11 +9,14 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "actuent",
-    "LAWP",
     "AI",
+    "LAWP",
+    "MCP",
+    "actuent",
     "agents",
-    "MCP"
+    "langchain",
+    "tools",
+    "vercel-ai-sdk"
   ],
   "author": "localilabs",
   "license": "MIT",
@@ -29,5 +32,32 @@
     "type": "git",
     "url": "https://github.com/localilabs/actuent-sdk"
   },
-  "homepage": "https://docs.actuent.ai/#sdk"
+  "homepage": "https://docs.actuent.ai/#sdk",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./ai": {
+      "types": "./dist/ai.d.ts",
+      "default": "./dist/ai.js"
+    },
+    "./langchain": {
+      "types": "./dist/langchain.d.ts",
+      "default": "./dist/langchain.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "ai": ">=4",
+    "@langchain/core": ">=0.3"
+  },
+  "peerDependenciesMeta": {
+    "ai": {
+      "optional": true
+    },
+    "@langchain/core": {
+      "optional": true
+    }
+  }
 }

@@ -202,6 +202,16 @@ export class Actuent {
     return this.request(`${this.baseUrl}/api/autocomplete?q=${encodeURIComponent(prefix)}`)
   }
 
+  /** Answer a question from one site's own pages ("is there parking?"): matching sentences with their source page. */
+  ask(domain: string, question: string): Promise<{ domain: string, name: string, question: string, sentences: { text: string, url: string }[], actions: { id: string, name: string, description?: string, url?: string }[], note?: string, message?: string }> {
+    return this.request(`${this.baseUrl}/api/ask?domain=${encodeURIComponent(domain)}&q=${encodeURIComponent(question)}`)
+  }
+
+  /** Sites like this one ("sites like notion.so"), with why each is similar. */
+  similar(domain: string, limit = 10): Promise<{ domain: string, count: number, sites: { domain: string, name: string, category: string | null, why: string }[], message?: string }> {
+    return this.request(`${this.baseUrl}/api/similar?domain=${encodeURIComponent(domain)}&limit=${limit}`)
+  }
+
   /** A site's agent-readiness score (0–100), label, category and checks. */
   score(domain: string) { return this.request(`${this.baseUrl}/badge.json?domain=${encodeURIComponent(domain)}`) }
 
