@@ -2,14 +2,14 @@
 
 # @actuent/sdk
 
-List your site on [Actuent](https://actuent.ai) — The Internet for AI.
+Give your app or agent the live internet with [Actuent](https://actuent.ai): what's open now, what's on this weekend, real prices and what a company offers, as clean JSON with links to the source. You can also list your own site so AI assistants find it.
 
-AI agents can't read normal websites. Actuent fixes that with LAWP (Locali AI Web Protocol) — a structured JSON version of your site that any AI can read, understand, and act on.
+Under the hood every site is structured as LAWP, an open format for what a site is and what an AI can do there.
 
 ## Try it in your terminal
 
 ```bash
-npx actuent search "vegan café copenhagen"
+npx actuent search "vegan cafe in brooklyn"
 npx actuent ask basecamp.com "is there a free plan?"
 npx actuent similar notion.so
 ```
