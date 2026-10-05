@@ -174,11 +174,24 @@ export class Actuent {
   }
 
   private async request(url: string, body?: unknown, attempt = 0): Promise<any> {
-    const res = await fetch(url, {
-      method: body === undefined ? "GET" : "POST",
-      headers: { "Accept": "application/json", ...(body !== undefined ? { "Content-Type": "application/json" } : {}), ...(this.apiKey ? { "Authorization": `Bearer ${this.apiKey}` } : {}) },
-      body: body === undefined ? undefined : JSON.stringify(body)
-    })
+    let res: Response
+    try {
+      res = await fetch(url, {
+        method: body === undefined ? "GET" : "POST",
+        headers: { "Accept": "application/json", ...(body !== undefined ? { "Content-Type": "application/json" } : {}), ...(this.apiKey ? { "Authorization": `Bearer ${this.apiKey}` } : {}) },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: AbortSignal.timeout(45000)
+      })
+    } catch (e) {
+      // Network blip or timeout: a short pause and one more try (twice at most), then the error.
+      if (attempt < Math.max(this.retries, 2)) { await new Promise(r => setTimeout(r, 1500 * (attempt + 1))); return this.request(url, body, attempt + 1) }
+      throw new ActuentError(`Couldn't reach Actuent: ${(e as Error).message}`, 0, null)
+    }
+    // A server hiccup (500, 502, 504): retried quickly too.
+    if ([500, 502, 504].includes(res.status) && attempt < Math.max(this.retries, 2)) {
+      await new Promise(r => setTimeout(r, 1500 * (attempt + 1)))
+      return this.request(url, body, attempt + 1)
+    }
     const data = await res.json().catch(() => null)
     // Busy or rate-limited: wait as long as the server asks, then try again (politely, a few times at most).
     if ((res.status === 429 || res.status === 503) && attempt < this.retries) {
