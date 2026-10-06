@@ -245,7 +245,7 @@ export class Actuent {
   findService(query: string, options: { location?: string, max_price?: number, currency?: string } = {}) { return this.tool("actuent_find_service", { query, ...options }) }
   plan(location: string, options: { stops?: string[], date?: string, start_time?: string, cuisine?: string, filters?: string[] } = {}) { return this.tool("actuent_plan", { location, ...options }) }
   trip(location: string, options: { days?: number, start_date?: string, filters?: string[] } = {}) { return this.tool("actuent_trip", { location, ...options }) }
-  events(options: { location?: string, query?: string, from?: string, to?: string } = {}) { return this.tool("actuent_events", options) }
+  events(options: { location?: string, query?: string, from?: string, to?: string, when?: "tonight" | "today" | "tomorrow" | "this weekend" | "next weekend" | "this week" | "next week" } = {}) { return this.tool("actuent_events", options) }
   compareSites(domains: string[]) { return this.tool("actuent_compare", { domains }) }
   compareProducts(urls: string[]) { return this.tool("actuent_compare", { products: urls }) }
   /** Pro: email (and optional webhook) when the price drops or it's back in stock. */

@@ -1,0 +1,20 @@
+name: Examples
+# Nightly: the examples in examples/ run against the live API, so the docs never show broken code.
+on:
+  schedule:
+    - cron: '20 5 * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  examples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci
+      - run: npm run build
+      - run: for f in examples/*.mjs; do echo "== $f"; node "$f"; done
