@@ -245,6 +245,14 @@ export class Actuent {
   findService(query: string, options: { location?: string, max_price?: number, currency?: string } = {}) { return this.tool("actuent_find_service", { query, ...options }) }
   plan(location: string, options: { stops?: string[], date?: string, start_time?: string, cuisine?: string, filters?: string[] } = {}) { return this.tool("actuent_plan", { location, ...options }) }
   trip(location: string, options: { days?: number, start_date?: string, filters?: string[] } = {}) { return this.tool("actuent_trip", { location, ...options }) }
+  /** Everything Actuent knows about one named thing: an artist and their concerts, a brand and its prices, a venue. */
+  about(name: string) { return this.tool("actuent_about", { name }) }
+  /** Read any public page live: text, products (Shopify sizes with cart links), events, hours, booking links. */
+  readPage(url: string) { return this.tool("actuent_get_page", { url }) }
+  /** Pro: email a business a question or message (or a booking request, for claimed sites). Show the user the text first; pass confirmed: true once they agree. */
+  contactBusiness(options: { domain: string, text: string, kind?: "question" | "message" | "booking_request", from_name?: string, reply_to?: string, date?: string, time?: string, party_size?: number, confirmed?: boolean }) { return this.tool("actuent_contact_business", options) }
+  /** Pro: get an email when a page changes, or when words appear or disappear ("tickets on sale", "sold out"). */
+  watchPage(options: { url?: string, phrase?: string, watch_for?: "change" | "appears" | "disappears", label?: string, webhook_url?: string, action?: "watch" | "list" | "remove" }) { return this.tool("actuent_watch_page", options) }
   events(options: { location?: string, query?: string, from?: string, to?: string, when?: "tonight" | "today" | "tomorrow" | "this weekend" | "next weekend" | "this week" | "next week" } = {}) { return this.tool("actuent_events", options) }
   compareSites(domains: string[]) { return this.tool("actuent_compare", { domains }) }
   compareProducts(urls: string[]) { return this.tool("actuent_compare", { products: urls }) }
