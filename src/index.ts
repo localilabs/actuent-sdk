@@ -1,3 +1,4 @@
+import type { ToolName, ToolArgs, ToolResults } from "./tools.generated"
 // A field of a structured action input (LAWP 0.3) — https://github.com/localilabs/lawp/blob/main/LAWP.md#structured-inputs-v03
 export type InputField = {
   name: string
@@ -228,7 +229,10 @@ export class Actuent {
   /** A site's agent-readiness score (0–100), label, category and checks. */
   score(domain: string) { return this.request(`${this.baseUrl}/badge.json?domain=${encodeURIComponent(domain)}`) }
 
-  /** Call any Actuent MCP tool, e.g. tool("actuent_plan", { location: "Copenhagen" }). */
+  /** Call any Actuent MCP tool, e.g. tool("actuent_plan", { location: "Copenhagen" }). Arguments and
+   *  results are typed from the server's own tool list (src/tools.generated.ts). */
+  async tool<N extends ToolName>(name: N, args?: ToolArgs[N]): Promise<ToolResults[N]>
+  async tool(name: string, args?: Record<string, unknown>): Promise<any>
   async tool(name: string, args: Record<string, unknown> = {}): Promise<any> {
     const reply = await this.request(`${this.agentsUrl}/api/mcp`, { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } })
     if (!reply?.result) throw new ActuentError(reply?.error?.message || "Unexpected response", undefined, reply)
@@ -267,3 +271,5 @@ export class Actuent {
   /** Pro: check a long-running action that returned pending. */
   actionStatus(domain: string, statusUrl: string) { return this.tool("actuent_action_status", { domain, status_url: statusUrl }) }
 }
+
+export type * from "./tools.generated"

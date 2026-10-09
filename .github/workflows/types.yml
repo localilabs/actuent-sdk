@@ -1,0 +1,19 @@
+name: Tool Types
+# Weekly and on every push: the generated tool types must match the live server's tool list
+# (scripts/gen_types.mjs). If this fails, run `node scripts/gen_types.mjs` and commit.
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  push:
+  workflow_dispatch:
+jobs:
+  types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node scripts/gen_types.mjs
+      - run: git diff --exit-code src/tools.generated.ts || (echo "The server's tools changed: run node scripts/gen_types.mjs and commit." && exit 1)
+      - run: npm ci && npx tsc --noEmit
